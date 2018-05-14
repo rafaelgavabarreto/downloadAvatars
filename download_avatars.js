@@ -1,19 +1,41 @@
 var request = require('request');
+var secrets = require('./secrets');
+
+console.log('Welcome to the GitHub Avatar Downloader!');
+
 var fs = require('fs');
 
-request.get('https://avatars2.githubusercontent.com/u/192451?v=4')
-  .on('error', function(err) {
-    throw err;
-  })
-  .on('response', function(response) {
-    console.log('Response Status Code: ', response.statusCode);
-  })
-  .pipe(fs.createWriteStream('./avatars/timmywil.jpg'));
+function getRepoContributors(repoOwner, repoName, cb) {
+  var options = {
+    url: "https://api.github.com/repos/" + repoOwner + "/" + repoName + "/contributors",
+    headers: {
+      'User-Agent': 'rafaelgavabarreto',
+      'Authorization': 'token ' + secrets.GITHUB_TOKEN
+    }
+  };
+  request(options, function(err, res, body) {
+    cb(err, body);
+  });
+}
+
+function downloadImageByURL(url, filePath) {
+  request.get(url)
+    .on('error', function(err) {
+      throw console.log('Well, that didnt\' work', err);
+    })
+    .on('response', function(response) {
+      console.log('Response Status Code: ', response.statusCode);
+    })
+    .pipe(fs.createWriteStream(filePath));
+}
 
 
-/*
-https: //avatars3.githubusercontent.com/u/37745408?s=400&v=4
-  https: //avatars3.githubusercontent.com/u/36269789?s=400&u=9a92166b205c97cebe73e3d56a11d9ca9405be1b&v=4
+getRepoContributors("jquery", "jquery", function(err, result) {
 
-  curl - u rafaelgavabarreto: dc4473aaf6bc750fa1f7fec13adf7414f7b3f7d9 - I https: //api.github.com/users/lighthouse-labs
-*/
+  var arrayUsers = JSON.parse(result);
+
+  for (i = 0; i < arrayUsers.length; i++) {
+    downloadImageByURL(arrayUsers[i].avatar_url, './avatars/' + arrayUsers[i].login + '.jpg');
+  }
+
+});
