@@ -23,7 +23,7 @@ function getRepoContributors(repoOwner, repoName, cb) {
 function downloadImageByURL(url, filePath) {
   request.get(url)
     .on('error', function(err) {
-      throw console.log('Well, that didnt\' work', err);
+      throw err;
     })
     .on('response', function(response) {
       console.log('Response Status Code: ', response.statusCode);
